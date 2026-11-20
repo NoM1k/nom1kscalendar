@@ -1,6 +1,7 @@
 // API tests (run with `npm test`). They start the real server with a temporary database.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
+import WebSocket from 'ws'; // Node 20 has no built-in WebSocket client
 import { startServer } from './helpers.js';
 
 let api;
@@ -228,10 +229,10 @@ describe('live updates', () => {
   test('broadcasts a "changed" message after a mutation', async () => {
     const ws = new WebSocket(api.wsUrl);
     await new Promise((resolve, reject) => {
-      ws.addEventListener('open', resolve);
-      ws.addEventListener('error', reject);
+      ws.once('open', resolve);
+      ws.once('error', reject);
     });
-    const message = new Promise((resolve) => ws.addEventListener('message', (e) => resolve(JSON.parse(e.data))));
+    const message = new Promise((resolve) => ws.once('message', (data) => resolve(JSON.parse(String(data)))));
 
     const { body } = await api.post('/api/events', {
       title: 'Live', start: at(8, 0, 25), end: at(9, 0, 25), organizerId: users[0].id,

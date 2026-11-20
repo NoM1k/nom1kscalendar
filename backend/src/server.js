@@ -13,7 +13,7 @@ import { availabilityRouter } from './routes/availability.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const frontendDir = path.join(here, '..', '..', 'frontend');
-const PORT = Number(process.env.PORT) || 3000;
+const PORT = Number(process.env.PORT) || 5000; // override with the PORT environment variable
 
 seedIfEmpty();
 

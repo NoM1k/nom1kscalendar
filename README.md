@@ -6,7 +6,9 @@ see colleagues' meetings, tasks/deadlines, busy/free status and office presence
 
 ## Quick start
 
-Requires Node.js 22.13+ (uses the built-in `node:sqlite`).
+Requires Node.js 20 or newer. On Node 22.13+ the built-in `node:sqlite` is used; on Node 20 the optional
+dependency `better-sqlite3` (prebuilt binaries) is used automatically. If `npm install` skipped its install
+script, run `npm rebuild better-sqlite3`.
 
 ```bash
 cd backend
@@ -14,7 +16,9 @@ npm install
 npm start
 ```
 
-Open http://localhost:3000. Demo data (4 users, events, tasks) is created on first start.
+Alternatively run `npm install` and `npm start` in the project root: the root `package.json` only forwards to `backend/`.
+
+Open http://localhost:5000 (default port; change it with the `PORT` environment variable). Demo data (4 users, events, tasks) is created on first start.
 Use `npm run dev` for auto-restart on changes. To reset the data, delete `backend/data/`.
 
 ## Tests
@@ -30,7 +34,7 @@ events, tasks, availability, error cases and the WebSocket "changed" message. Th
 
 ## Stack
 
-- **Backend:** Node.js, Express, built-in `node:sqlite` (SQLite file in `backend/data/`), `ws` (WebSocket)
+- **Backend:** Node.js, Express, SQLite via built-in `node:sqlite` or `better-sqlite3` (file in `backend/data/`), `ws` (WebSocket)
 - **Frontend:** plain HTML / CSS / JavaScript (ES modules), no build step. Served by the backend.
 - **No login** (for now): the UI lets you pick which user you are.
 

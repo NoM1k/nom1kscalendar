@@ -1,18 +1,38 @@
 // SQLite database: connection + schema.
 // All timestamps are stored as ISO 8601 UTC strings (e.g. "2026-11-18T09:00:00.000Z").
-import { DatabaseSync } from 'node:sqlite'; // built into Node 22.13+, no native build needed
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+// Driver: the SQLite built into Node 22.13+ (no native build needed), otherwise `better-sqlite3`
+// (an optional dependency with prebuilt binaries for Node 20). Both offer the same small API we use:
+// exec(), prepare().run/get/all(). Do not use driver-specific features elsewhere.
+async function loadDriver() {
+  try {
+    return (await import('node:sqlite')).DatabaseSync;
+  } catch {
+    // Not available (Node < 22.13): fall through to better-sqlite3.
+  }
+  try {
+    return (await import('better-sqlite3')).default;
+  } catch {
+    throw new Error(
+      `No SQLite driver available on Node ${process.versions.node}. ` +
+        'Use Node.js 22.13+ (built-in node:sqlite), or run "npm install" in backend/ so that the optional ' +
+        'dependency better-sqlite3 is installed (supports Node 20).'
+    );
+  }
+}
+const Database = await loadDriver();
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dataDir = path.join(here, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
-export const db = new DatabaseSync(process.env.DB_FILE || path.join(dataDir, 'calendar.db'));
+export const db = new Database(process.env.DB_FILE || path.join(dataDir, 'calendar.db'));
 db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
 
-/** Wrap a function so all its statements run in one transaction (node:sqlite has no built-in helper). */
+/** Wrap a function so all its statements run in one transaction (works the same with both drivers). */
 export function transaction(fn) {
   return (...args) => {
     db.exec('BEGIN');

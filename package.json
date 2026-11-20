@@ -1,0 +1,10 @@
+{
+  "name": "arbeitskalender",
+  "private": true,
+  "description": "Root wrapper: forwards npm commands to backend/",
+  "scripts": {
+    "postinstall": "npm --prefix backend install",
+    "start": "npm --prefix backend start",
+    "test": "npm --prefix backend test"
+  }
+}
