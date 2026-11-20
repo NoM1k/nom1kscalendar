@@ -1,0 +1,380 @@
+:root {
+  --bg: #f5f6fa;
+  --card: #ffffff;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --border: #e2e5ee;
+  --accent: #4f6bed;
+  --free: #30a46c;
+  --busy: #e5484d;
+  --office: #4f6bed;
+  --home: #f5a524;
+  --away: #9aa0ad;
+  --surface-2: #fafbfd;   /* deadlines row */
+  --today-bg: #f6f8ff;    /* highlighted "today" column */
+  --tint: 18%;            /* how strongly a person's color tints events/chips */
+  --shadow: rgba(0, 0, 0, 0.18);
+  --hour: 48px; /* default; week.js overrides it per zoom level on .week */
+  --gutter: 56px;
+  color-scheme: light;
+}
+
+/* Dark palette: applied when the user chose dark, or (no choice made) when the OS prefers dark. */
+:root[data-theme="dark"] {
+  --bg: #14171f;
+  --card: #1c2029;
+  --text: #e6e8ee;
+  --muted: #9aa1b0;
+  --border: #2c3240;
+  --accent: #6b86ff;
+  --office: #6b86ff;
+  --surface-2: #181c25;
+  --today-bg: #1b2133;
+  --tint: 32%;
+  --shadow: rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171f;
+    --card: #1c2029;
+    --text: #e6e8ee;
+    --muted: #9aa1b0;
+    --border: #2c3240;
+    --accent: #6b86ff;
+    --office: #6b86ff;
+    --surface-2: #181c25;
+    --today-bg: #1b2133;
+    --tint: 32%;
+    --shadow: rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ---- top bar ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 { margin: 0; font-size: 1.15rem; }
+.controls { display: flex; align-items: center; gap: 8px; }
+.controls label { color: var(--muted); font-size: 0.85rem; }
+.zoom-label { min-width: 3.2em; text-align: center; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+button, select, input[type="date"] {
+  font: inherit;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { cursor: pointer; }
+button:hover { background: var(--bg); }
+button:disabled { opacity: 0.45; cursor: default; }
+[hidden] { display: none !important; }
+
+/* Segmented switch (Week | Team) */
+.seg { display: inline-flex; }
+.seg button { border-radius: 0; margin-left: -1px; }
+.seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.seg button:last-child { border-radius: 0 6px 6px 0; }
+.seg button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.primary:hover { filter: brightness(1.1); background: var(--accent); }
+button.danger { color: var(--busy); border-color: var(--busy); }
+.muted { color: var(--muted); }
+
+/* ---- meeting dialog ---- */
+#meeting-dialog, #task-dialog {
+  width: min(640px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 12px 40px var(--shadow);
+}
+#meeting-dialog::backdrop, #task-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.md-form { display: grid; gap: 14px; padding: 20px 22px; }
+.md-form h2 { margin: 0; font-size: 1.15rem; }
+.md-field { display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.md-field input[type="text"], .md-field input[type="date"], .md-field input[type="time"] { width: 100%; color: var(--text); }
+.md-field select { width: 100%; }
+.md-row { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+.md-attendees { display: grid; gap: 4px; max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 4px; }
+.att { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 6px; color: var(--text); font-size: 0.9rem; cursor: pointer; }
+.att:hover { background: var(--bg); }
+.att-name { min-width: 130px; }
+.att-name em { color: var(--muted); font-style: normal; font-size: 0.75rem; }
+.att-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.8rem; }
+.att-detail { color: var(--muted); }
+.md-summary { padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; background: var(--bg); color: var(--muted); }
+.md-summary.ok { background: color-mix(in srgb, var(--free) 18%, var(--card)); color: var(--text); }
+.md-summary.warn { background: color-mix(in srgb, var(--home) 22%, var(--card)); color: var(--text); }
+.md-error { color: var(--busy); font-size: 0.85rem; min-height: 1em; }
+.md-actions { display: flex; align-items: center; gap: 8px; }
+.md-actions .spacer { flex: 1; }
+
+/* Clickable items */
+.event, .tv-block, .chip { cursor: pointer; }
+.day-col, .tv-track, .deadline-cell { cursor: cell; }
+
+/* Connection / loading problems */
+.banner {
+  padding: 8px 24px;
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--busy) 20%, var(--card));
+  border-bottom: 1px solid var(--border);
+}
+
+/* Second bar: "I am" + my status, and the calendar selector */
+.subbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 24px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.check { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text) !important; }
+
+.live { font-size: 0.85rem; }
+.live.on { color: var(--free); }
+.live.off { color: var(--away); }
+
+/* minmax(0, 1fr): wide children (team timeline) must scroll inside their box, not stretch the page. */
+main { max-width: 1200px; margin: 0 auto; padding: 16px 24px 32px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+
+/* ---- team strip ---- */
+.team { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.card .name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.badges { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; color: #fff; }
+.badge.free { background: var(--free); }
+.badge.busy { background: var(--busy); }
+.badge.office { background: var(--office); }
+.badge.home { background: var(--home); }
+.badge.away { background: var(--away); }
+
+/* ---- week view ---- */
+.week { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+.week-head, .week-deadlines, .week-grid {
+  display: grid;
+  grid-template-columns: var(--gutter) repeat(var(--days, 7), minmax(0, 1fr)); /* --days: 7 (week) or 1 (day) */
+}
+
+.week-head { border-bottom: 1px solid var(--border); }
+.day-head { padding: 8px 4px; text-align: center; border-left: 1px solid var(--border); }
+.day-head .dow { display: block; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+.day-head .dom { font-size: 1.2rem; font-weight: 600; }
+.day-head.today .dom {
+  display: inline-block;
+  min-width: 32px;
+  line-height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+
+.week-deadlines { border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.deadline-label { font-size: 0.7rem; color: var(--muted); padding: 6px 8px; text-align: right; }
+.deadline-cell { border-left: 1px solid var(--border); padding: 4px; min-height: 30px; display: grid; gap: 3px; align-content: start; }
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c) var(--tint), var(--card));
+  border: 1px solid color-mix(in srgb, var(--c) 45%, var(--card));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c); flex: none; }
+.chip.done { opacity: 0.55; text-decoration: line-through; }
+
+.event-meta { font-size: 0.7rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.week.single-day .day-head { padding: 10px; }
+
+/* ---- month view ---- */
+.month { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.m-head, .m-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.m-head { border-bottom: 1px solid var(--border); background: var(--surface-2); }
+.m-dow { padding: 8px; text-align: center; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; }
+.m-cell {
+  min-height: 118px;
+  padding: 4px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  cursor: pointer;
+}
+.m-cell:nth-child(7n) { border-right: 0; }
+.m-cell:hover { background: var(--bg); }
+.m-cell.other { background: var(--surface-2); color: var(--muted); }
+.m-cell.other .m-item { opacity: 0.6; }
+.m-cell.today { background: var(--today-bg); }
+.m-date { align-self: flex-end; min-width: 24px; line-height: 24px; text-align: center; font-size: 0.8rem; border-radius: 50%; }
+.m-cell.today .m-date { background: var(--accent); color: #fff; font-weight: 600; }
+.m-item { font-size: 0.72rem; padding: 1px 5px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-event {
+  border-left: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) var(--tint), var(--card));
+  color: var(--text);
+}
+.m-time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.m-more { font-size: 0.72rem; color: var(--muted); padding-left: 5px; }
+
+/* ---- team view (one row per person, horizontal timeline) ---- */
+.tv { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; --label-w: 200px; }
+.tv-scroll { overflow-x: auto; }
+.tv-row { display: flex; border-bottom: 1px solid var(--border); }
+.tv-row:last-child { border-bottom: 0; }
+.tv-label {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  flex: none;
+  width: var(--label-w);
+  padding: 10px 12px;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+}
+.tv-label em { color: var(--muted); font-style: normal; font-weight: 400; font-size: 0.8rem; }
+.tv-corner { color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; padding-top: 12px; }
+.tv-head { background: var(--surface-2); }
+.tv-hours { display: flex; flex: none; }
+.tv-hour { flex: none; padding: 12px 0 8px 6px; font-size: 0.7rem; color: var(--muted); border-left: 1px solid var(--border); }
+.tv-track {
+  position: relative;
+  flex: none;
+  min-height: 64px;
+  background-image: linear-gradient(to right, var(--border) 1px, transparent 1px);
+  background-size: var(--hourw) 100%;
+}
+.tv-block {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  overflow: hidden;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border-left: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) var(--tint), var(--card));
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tv-block:hover { z-index: 2; box-shadow: 0 2px 8px var(--shadow); }
+.tv-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--busy); z-index: 3; pointer-events: none; }
+
+/* Reserve the scrollbar width in all three bands so the columns line up. */
+.week-head, .week-deadlines { overflow: hidden; scrollbar-gutter: stable; }
+.week-body { max-height: 620px; overflow-y: auto; scrollbar-gutter: stable; }
+.week-grid { position: relative; }
+
+.hour-label { height: var(--hour); position: relative; }
+.hour-label span {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: var(--card);
+  padding: 0 2px;
+}
+.hour-label:first-child span { display: none; }
+
+.day-col {
+  position: relative;
+  border-left: 1px solid var(--border);
+  background-image: linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 100% var(--hour);
+}
+.day-col.today { background-color: var(--today-bg); }
+
+.event {
+  position: absolute;
+  overflow: hidden;
+  padding: 3px 6px;
+  border-radius: 5px;
+  border-left: 3px solid var(--c);
+  background: color-mix(in srgb, var(--c) var(--tint), var(--card));
+  font-size: 0.75rem;
+  line-height: 1.25;
+  cursor: default;
+}
+.event:hover { z-index: 2; box-shadow: 0 2px 8px var(--shadow); }
+.event-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event-time { color: var(--muted); font-size: 0.7rem; }
+
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--busy);
+  z-index: 3;
+  pointer-events: none;
+}
+.now-line::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--busy);
+}
+
+#range-label, .controls label, .check { white-space: nowrap; }
+
+@media (max-width: 700px) {
+  .topbar, .subbar, main { padding-left: 12px; padding-right: 12px; }
+  .controls { flex-wrap: wrap; }
+  /* Compact team strip: two per row, so the calendar starts higher up. */
+  .team { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .team .card { padding: 8px 10px; }
+  .team .name { font-size: 0.85rem; }
+  .team .badge { font-size: 0.7rem; padding: 1px 6px; }
+  .att { flex-wrap: wrap; }
+  .att-status { flex-basis: 100%; padding-left: 26px; }
+  .md-row { grid-template-columns: 1fr 1fr; }
+  .md-row .md-field:first-child { grid-column: 1 / -1; }
+  .week { overflow-x: auto; }
+  .week:not(.single-day) .week-head, .week:not(.single-day) .week-deadlines, .week:not(.single-day) .week-grid { min-width: 640px; }
+  .month { overflow-x: auto; }
+  .m-head, .m-grid { min-width: 640px; }
+}

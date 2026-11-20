@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arbeitskalender</title>
+  <script>
+    // Apply a saved theme before first paint to avoid a light flash (see js/theme.js).
+    try { var t = JSON.parse(localStorage.getItem('ak.theme')); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Arbeitskalender</h1>
+    <div class="controls">
+      <button id="today-btn" type="button">Today</button>
+      <button id="prev" type="button" aria-label="Previous">‹</button>
+      <button id="next" type="button" aria-label="Next">›</button>
+      <strong id="range-label"></strong>
+      <input id="date-picker" type="date" aria-label="Jump to date" />
+    </div>
+    <div class="seg" role="group" aria-label="View">
+      <button type="button" data-view="day">Day</button>
+      <button type="button" data-view="week">Week</button>
+      <button type="button" data-view="month">Month</button>
+      <button type="button" data-view="team">Team</button>
+    </div>
+    <div class="controls">
+      <button id="zoom-out" type="button" title="Zoom out (Ctrl + mouse wheel)" aria-label="Zoom out">−</button>
+      <span id="zoom-label" class="zoom-label">100%</span>
+      <button id="zoom-in" type="button" title="Zoom in (Ctrl + mouse wheel)" aria-label="Zoom in">+</button>
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode">☾</button>
+      <span id="live-indicator" class="live off" title="Live connection">● offline</span>
+    </div>
+  </header>
+
+  <div class="subbar">
+    <div class="controls">
+      <label for="me-select">I am</label>
+      <select id="me-select"></select>
+      <select id="office-select" aria-label="My office status">
+        <option value="office">In office</option>
+        <option value="home">Home office</option>
+        <option value="away">Away</option>
+      </select>
+      <label class="check"><input id="dnd" type="checkbox" /> Do not disturb</label>
+    </div>
+    <div class="controls">
+      <button id="new-meeting" type="button" class="primary">+ New meeting</button>
+      <button id="new-task" type="button">+ New task</button>
+    </div>
+    <div class="controls" id="calendar-of">
+      <label for="user-select">Calendar of</label>
+      <select id="user-select"></select>
+    </div>
+  </div>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <dialog id="meeting-dialog" aria-labelledby="md-heading">
+    <form method="dialog" class="md-form">
+      <h2 id="md-heading">New meeting</h2>
+
+      <label class="md-field">Title
+        <input id="md-title" type="text" maxlength="120" placeholder="e.g. Project sync" required />
+      </label>
+
+      <div class="md-row">
+        <label class="md-field">Date <input id="md-date" type="date" required /></label>
+        <label class="md-field">From <input id="md-start" type="time" step="300" required /></label>
+        <label class="md-field">To <input id="md-end" type="time" step="300" required /></label>
+      </div>
+
+      <label class="check"><input id="md-multiday" type="checkbox" /> Ends on a different day</label>
+      <label id="md-enddate-wrap" class="md-field" hidden>End date <input id="md-end-date" type="date" /></label>
+
+      <label class="md-field">Location
+        <input id="md-location" type="text" maxlength="120" placeholder="Room, online, ..." />
+      </label>
+
+      <div class="md-field">
+        <span>Attendees <small class="muted">· organizer: <span id="md-organizer"></span></small></span>
+        <div id="md-attendees" class="md-attendees"></div>
+      </div>
+
+      <div id="md-summary" class="md-summary"></div>
+      <div id="md-error" class="md-error" role="alert"></div>
+
+      <div class="md-actions">
+        <button id="md-delete" type="button" class="danger" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button id="md-cancel" type="button">Cancel</button>
+        <button id="md-submit" type="submit" class="primary">Create meeting</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" aria-labelledby="td-heading">
+    <form method="dialog" class="md-form">
+      <h2 id="td-heading">New task</h2>
+
+      <label class="md-field">Title
+        <input id="td-title" type="text" maxlength="120" placeholder="e.g. Send weekly report" required />
+      </label>
+
+      <div class="md-row">
+        <label class="md-field">Due date <input id="td-date" type="date" required /></label>
+        <label class="md-field">Due time <input id="td-time" type="time" step="300" required /></label>
+        <label class="md-field">Owner <select id="td-owner"></select></label>
+      </div>
+
+      <label id="td-done-wrap" class="check" hidden><input id="td-done" type="checkbox" /> Done</label>
+
+      <div id="td-error" class="md-error" role="alert"></div>
+
+      <div class="md-actions">
+        <button id="td-delete" type="button" class="danger" hidden>Delete</button>
+        <span class="spacer"></span>
+        <button id="td-cancel" type="button">Cancel</button>
+        <button id="td-submit" type="submit" class="primary">Create task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <main>
+    <section id="team" class="team" aria-label="Team status"></section>
+    <section id="week" aria-label="Day and week view"></section>
+    <section id="month" aria-label="Month view" hidden></section>
+    <section id="team-view" aria-label="Team view" hidden></section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
